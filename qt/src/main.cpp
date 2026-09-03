@@ -1,16 +1,28 @@
-#include <QGuiApplication>
-#include <QQmlApplicationEngine>
-#include <QtWebView/QtWebView>
-#include "editorcontroller.h"
+#include <QApplication>
+
+#include "appstate.h"
+#include "lang.h"
+#include "mainwindow.h"
+#include "theme.h"
 
 int main(int argc, char *argv[]) {
-    QGuiApplication app(argc, argv);
-    QtWebView::initialize();
-    qmlRegisterType<EditorController>("CIDE", 1, 0, "EditorController");
-    QQmlApplicationEngine engine;
-    const QUrl url(u"qrc:/CIDE/qml/Main.qml"_qs);
-    QObject::connect(&engine, &QQmlApplicationEngine::objectCreationFailed,
-                     &app, [] { QCoreApplication::exit(-1); }, Qt::QueuedConnection);
-    engine.load(url);
+    /* The interface of CIDE (commit 3673f5a) reimplemented with
+     * pure C++ / Qt Widgets — no QML. */
+    QApplication app(argc, argv);
+    QApplication::setApplicationName(QStringLiteral("CIDE"));
+    QApplication::setOrganizationName(QStringLiteral("CIDE"));
+    QApplication::setApplicationDisplayName(QStringLiteral("CIDE"));
+    QApplication::setApplicationVersion(QStringLiteral("1.13.2"));
+
+    Lang::setFromCode(AppState::instance()->langCode());
+    Theme::apply();
+
+    MainWindow window;
+    if (AppState::instance()->fullscreen()) {
+        window.showFullScreen();
+    } else {
+        window.show();
+    }
+
     return app.exec();
 }
