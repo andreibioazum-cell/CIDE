@@ -5,12 +5,12 @@ import EditorFile from "lib/editorFile";
 
 /**
  * Opens the Welcome tab as an EditorFile page
+ * @param {{ render?: boolean }} [options]
  */
-export default function openWelcomeTab() {
-	// Check if welcome tab is already open
+export default function openWelcomeTab({ render } = {}) {
 	const existingFile = editorManager.files.find((f) => f.id === "welcome-tab");
 	if (existingFile) {
-		existingFile.makeActive();
+		if (render !== false) existingFile.makeActive();
 		return;
 	}
 
@@ -18,14 +18,14 @@ export default function openWelcomeTab() {
 
 	const welcomeFile = new EditorFile("Welcome", {
 		id: "welcome-tab",
-		render: true,
+		render: render !== false,
 		type: "page",
 		content: welcomeContent,
 		tabIcon: "icon acode",
 		hideQuickTools: true,
+		persistInSession: false,
+		closable: false,
 	});
-
-	// Set custom subtitle for the header
 	welcomeFile.setCustomTitle(() => "Get Started");
 }
 
@@ -46,8 +46,8 @@ function createWelcomeContent() {
 			<header className="welcome-header">
 				<img className="logo" src={logoSrc} width="48" height="48" alt="" />
 				<div className="welcome-header-text">
-					<h1>Welcome to Acode</h1>
-					<p className="tagline">Powerful code editor for Android</p>
+					<h1>Welcome to CIDE</h1>
+					<p className="tagline">C code editor for Android</p>
 				</div>
 			</header>
 
@@ -101,11 +101,6 @@ function createWelcomeContent() {
 						icon="settings"
 						label={strings.settings}
 						onClick={() => acode.exec("open", "settings")}
-					/>
-					<ActionRow
-						icon="color_lenspalette"
-						label={strings["change theme"]}
-						onClick={() => acode.exec("change-app-theme")}
 					/>
 					<ActionRow
 						icon="extension"

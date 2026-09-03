@@ -1,23 +1,17 @@
 import fonts from "lib/fonts";
 import settings from "lib/settings";
-import { isDeviceDarkTheme } from "lib/systemConfiguration";
 import { updateActiveTerminals } from "settings/terminalSettings";
 import color from "utils/color";
 import ThemeBuilder from "./builder";
-import themes, { updateSystemTheme } from "./preInstalled";
+import themes from "./preInstalled";
 
 /** @type {Map<string, ThemeBuilder>} */
 const appThemes = new Map();
 let themeApplied = false;
 let firstTime = true;
 
-const darkModeMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-let systemThemeWatcherActive = false;
-
 function init() {
 	themes.forEach((theme) => add(theme));
-	updateSystemThemeWatcher(settings.value.appTheme);
-	settings.on("update:appTheme", updateSystemThemeWatcher);
 }
 
 /**
@@ -52,7 +46,7 @@ function list() {
  * @returns {ThemeBuilder}
  */
 function get(name) {
-	return appThemes.get(name.toLowerCase());
+	return appThemes.get(String(name || "").toLowerCase());
 }
 
 /**
@@ -66,15 +60,8 @@ function add(theme) {
 
 	appThemes.set(theme.id, theme);
 
-	const { appTheme } = settings.value;
-
-	if (theme.matches(appTheme)) {
-		if (appTheme !== "system") {
-			apply(appTheme);
-		} else {
-			updateSystemTheme(isDeviceDarkTheme());
-			themeApplied = true;
-		}
+	if (theme.matches("dark") || theme.id === "dark") {
+		apply("dark");
 	}
 }
 
@@ -84,33 +71,22 @@ function add(theme) {
  * @param {boolean} init Whether or not this is the first time the theme is being applied
  */
 export async function apply(id, init) {
-	if (!DOES_SUPPORT_THEME) {
-		id = "default";
-	}
-	if (id.toLowerCase() === "system") {
-		// Refresh the mutable System theme before reading its preferred editor
-		// theme. Do not re-enter apply() while appTheme is being updated below.
-		updateSystemTheme(isDeviceDarkTheme(), false);
-	}
+	id = "dark";
 
 	themeApplied = true;
 	const theme = get(id);
+	if (!theme) return;
+
 	const $style = document.head.get("style#app-theme") ?? (
 		<style id="app-theme"></style>
 	);
 	const update = {
-		appTheme: id,
+		appTheme: "dark",
+		editorTheme: "one_dark",
 	};
 
-	if (id === "custom") {
-		update.customTheme = theme.toJSON();
-	}
-
-	if (init && theme.preferredEditorTheme) {
-		update.editorTheme = theme.preferredEditorTheme;
-		if (editorManager != null && editorManager.editor != null) {
-			editorManager.editor.setTheme(theme.preferredEditorTheme);
-		}
+	if (init && editorManager != null && editorManager.editor != null) {
+		editorManager.editor.setTheme("one_dark");
 	}
 
 	if (init && theme.preferredFont) {
@@ -118,18 +94,18 @@ export async function apply(id, init) {
 		fonts.setFont(theme.preferredFont);
 	}
 
-	if (init && firstTime && theme.preferredTerminalTheme) {
+	if (init && firstTime) {
 		update.terminalSettings = {
 			...(settings.value.terminalSettings || {}),
-			theme: theme.preferredTerminalTheme,
+			theme: "dark",
 		};
 	}
 
 	settings.update(update, false);
 
-	if (init && firstTime && theme.preferredTerminalTheme) {
+	if (init && firstTime) {
 		if (editorManager != null) {
-			updateActiveTerminals("theme", theme.preferredTerminalTheme);
+			updateActiveTerminals("theme", "dark");
 		}
 	}
 
@@ -140,11 +116,9 @@ export async function apply(id, init) {
 
 	const primaryColor = color(theme.primaryColor).hex.toString();
 	const scheme = theme.toJSON("hex");
-	// Set status bar and navigation bar color
 	system.setUiTheme(primaryColor, scheme);
 
 	if (firstTime) {
-		// To make sure system bars are updated
 		setTimeout(() => {
 			system.setUiTheme(primaryColor, scheme);
 		}, 1000);
@@ -169,47 +143,7 @@ export function update(theme) {
 	});
 }
 
-function syncSystemTheme(event, applyTheme = true) {
-	if (settings.value.appTheme.toLowerCase() !== "system") return;
-	const isDark = event ? event.matches : darkModeMediaQuery.matches;
-	updateSystemTheme(isDark, applyTheme);
-}
-
-function startSystemThemeWatcher() {
-	if (systemThemeWatcherActive) return;
-	systemThemeWatcherActive = true;
-	if (typeof darkModeMediaQuery.addEventListener === "function") {
-		darkModeMediaQuery.addEventListener("change", syncSystemTheme);
-	} else {
-		darkModeMediaQuery.addListener(syncSystemTheme);
-	}
-}
-
-function stopSystemThemeWatcher() {
-	if (!systemThemeWatcherActive) return;
-	systemThemeWatcherActive = false;
-	if (typeof darkModeMediaQuery.removeEventListener === "function") {
-		darkModeMediaQuery.removeEventListener("change", syncSystemTheme);
-	} else {
-		darkModeMediaQuery.removeListener(syncSystemTheme);
-	}
-}
-
-/**
- * Start or stop syncing the app theme with the OS color scheme
- * @param {string} theme
- */
-export function updateSystemThemeWatcher(theme) {
-	if (String(theme).toLowerCase() === "system") {
-		startSystemThemeWatcher();
-		// Starting the watcher happens from the appTheme update listener. Applying
-		// the theme here would update appTheme again before the first settings
-		// update is saved, causing unbounded synchronous recursion.
-		syncSystemTheme(undefined, false);
-		return;
-	}
-	stopSystemThemeWatcher();
-}
+export function updateSystemThemeWatcher() {}
 
 export default {
 	get applied() {

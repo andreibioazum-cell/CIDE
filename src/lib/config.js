@@ -7,7 +7,7 @@ const config = {
 	FILE_NAME_REGEX: /^((?![:<>"\\\|\?\*]).)*$/,
 	FONT_SIZE: /^[0-9\.]{1,3}(px|rem|em|pt|mm|pc|in)$/,
 	DEFAULT_FILE_SESSION: "default-session",
-	DEFAULT_FILE_NAME: "untitled.txt",
+	DEFAULT_FILE_NAME: "untitled.c",
 	CONSOLE_PORT: 8159,
 	SERVER_PORT: 8158,
 	PREVIEW_PORT: 8158,
@@ -27,14 +27,6 @@ const config = {
 	},
 
 	API_BASE: `${BASE_URL}/api`,
-	SKU_LIST: Object.freeze([
-		"crystal",
-		"bronze",
-		"silver",
-		"gold",
-		"platinum",
-		"titanium",
-	]),
 	LOG_FILE_NAME: "Acode.log",
 
 	// Social Links

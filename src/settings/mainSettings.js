@@ -15,8 +15,6 @@ import { showPrivacyOptions, subscribePrivacyState } from "lib/startAd";
 import openAdRewardsPage from "pages/adRewards";
 import Changelog from "pages/changelog/changelog";
 import plugins from "pages/plugins";
-import Sponsors from "pages/sponsors";
-import themeSetting from "pages/themeSetting";
 import helpers from "utils/helpers";
 import About from "../pages/about";
 import otherSettings from "./appSettings";
@@ -81,14 +79,6 @@ export default function mainSettings() {
 			chevron: true,
 		},
 		{
-			key: "theme",
-			text: strings.theme,
-			icon: "color_lenspalette",
-			info: strings["settings-info-main-theme"],
-			category: categories.customizationTools,
-			chevron: true,
-		},
-		{
 			key: "plugins",
 			text: strings["plugins"],
 			icon: "extension",
@@ -136,14 +126,6 @@ export default function mainSettings() {
 			text: strings.about,
 			icon: "info",
 			info: `Version ${BuildInfo.version}`,
-			category: categories.aboutAcode,
-			chevron: true,
-		},
-		{
-			key: "sponsors",
-			text: strings.sponsor,
-			icon: "favorite",
-			info: strings["settings-info-main-sponsors"],
 			category: categories.aboutAcode,
 			chevron: true,
 		},
@@ -234,16 +216,8 @@ export default function mainSettings() {
 				appSettings.uiSettings[key].show();
 				break;
 
-			case "theme":
-				themeSetting();
-				break;
-
 			case "about":
 				About();
-				break;
-
-			case "sponsors":
-				Sponsors();
 				break;
 
 			case "rateapp":

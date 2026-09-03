@@ -79,7 +79,9 @@ function getTabsRelativeToFile(side, referenceFile) {
 }
 
 async function closeTabs(files, options = {}) {
-	const closableFiles = files.filter((file) => file && !file.pinned);
+	const closableFiles = files.filter(
+		(file) => file && file.closable !== false && !file.pinned,
+	);
 	if (!closableFiles.length) return false;
 
 	const {
@@ -275,10 +277,15 @@ export default {
 		editorManager.editor.gotoLine(lineStr, colStr);
 	},
 	async "new-file"() {
-		let filename = await prompt(strings["enter file name"], "", "filename", {
-			match: config.FILE_NAME_REGEX,
-			required: true,
-		});
+		let filename = await prompt(
+			strings["enter file name"],
+			config.DEFAULT_FILE_NAME,
+			"filename",
+			{
+				match: config.FILE_NAME_REGEX,
+				required: true,
+			},
+		);
 
 		filename = helpers.fixFilename(filename);
 		if (!filename) return;
@@ -518,18 +525,6 @@ export default {
 			/* webpackChunkName: "changeMode" */ "palettes/changeMode"
 		);
 		changeMode();
-	},
-	async "change-app-theme"() {
-		const { default: changeTheme } = await import(
-			/* webpackChunkName: "changeTheme" */ "palettes/changeTheme"
-		);
-		changeTheme("app");
-	},
-	async "change-editor-theme"() {
-		const { default: changeTheme } = await import(
-			/* webpackChunkName: "changeTheme" */ "palettes/changeTheme"
-		);
-		changeTheme("editor");
 	},
 	"toggle-fullscreen"() {
 		app.classList.toggle("fullscreen-mode");

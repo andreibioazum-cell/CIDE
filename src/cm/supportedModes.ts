@@ -142,6 +142,10 @@ for (const lang of languages as readonly LanguageDescription[]) {
 
 		const aliases = collectAliases(name, lang.alias);
 		const modeId = getModeId(name, aliases);
+		const normalizedName = name.toLowerCase();
+		if (normalizedName === "java" || normalizedName.startsWith("java ")) {
+			continue;
+		}
 
 		// File extensions & filenames
 		const langExtensions = [...(lang.extensions || [])];
@@ -154,7 +158,6 @@ for (const lang of languages as readonly LanguageDescription[]) {
 		];
 
 		// Merge custom mappings to make language detection robust
-		const normalizedName = name.toLowerCase();
 		if (normalizedName === "shell" || modeId === "shell") {
 			langExtensions.push(
 				"zsh",

@@ -191,21 +191,6 @@ body.no-animation {
           opacity: 1;
         }
       }
-
-      // Special styling for the favorites/sponsors icon
-      &.favorite {
-        margin-top: 8px;
-
-        &::after {
-          display: none;
-        }
-
-        &:hover {
-          color: #ff6b8a;
-          opacity: 1;
-          background-color: rgba(255, 107, 138, 0.12);
-        }
-      }
     }
   }
 

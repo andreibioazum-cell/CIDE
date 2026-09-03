@@ -344,6 +344,7 @@ function maybeRecommendLanguageModeExtension(file, modeInfo) {
  * @property {object} [pane] target editor pane
  * @property {boolean} [isPanePlaceholder] temporary empty tab for an empty pane
  * @property {boolean} [persistInSession] restore the tab in a future app session
+ * @property {boolean} [closable] whether the tab can be closed (default true)
  * @property {boolean} [highlightStyles] adopt static CodeMirror highlight CSS into the custom tab shadow root
  */
 
@@ -456,6 +457,11 @@ export default class EditorFile {
 	 */
 	#pinned = false;
 	/**
+	 * Whether the tab can be closed.
+	 * @type {boolean}
+	 */
+	#closable = true;
+	/**
 	 * contains information about cursor position, scroll left, scroll top, folds.
 	 */
 	#loadOptions;
@@ -534,6 +540,7 @@ export default class EditorFile {
 		this.paneId = options?.paneId || options?.pane?.id || null;
 		this.isPanePlaceholder = !!options?.isPanePlaceholder;
 		this.persistInSession = options?.persistInSession !== false;
+		this.#closable = options?.closable !== false;
 
 		// if options are passed
 		if (options) {
@@ -746,6 +753,7 @@ export default class EditorFile {
 		this.#tab.addEventListener("click", tabOnclick.bind(this));
 		appSettings.on("update:openFileListPos", this.#onFilePosChange);
 		this.pinned = !!options?.pinned;
+		this.#updateTab();
 
 		addFile(this);
 		editorManager.emit("new-file", this);
@@ -998,12 +1006,17 @@ export default class EditorFile {
 		return this.#pinned;
 	}
 
+	get closable() {
+		return this.#closable;
+	}
+
 	set pinned(value) {
 		this.setPinnedState(value);
 	}
 
 	setPinnedState(value, options = {}) {
 		const { reorder = false, emit = true } = options;
+		if (!this.#closable) return this.#pinned;
 		value = !!value;
 		if (this.#pinned === value) return value;
 
@@ -1349,6 +1362,7 @@ export default class EditorFile {
 			silentPinned = false,
 			suppressPanePlaceholder = false,
 		} = options || {};
+		if (!this.#closable) return false;
 		const isUnsaved = this.refreshUnsavedState();
 		const suppressFallback =
 			suppressPanePlaceholder && this.isPanePlaceholder && !isUnsaved;
@@ -2021,6 +2035,12 @@ export default class EditorFile {
 	}
 
 	#createTabTail() {
+		if (!this.#closable) {
+			return tag("span", {
+				className: "icon",
+			});
+		}
+
 		if (!this.#pinned) {
 			return tag("span", {
 				className: "icon cancel",

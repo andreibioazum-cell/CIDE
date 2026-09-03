@@ -221,7 +221,7 @@ class Acode {
 			},
 			unregister: (id) => cmThemeRegistry.removeTheme(id),
 			list: () => cmThemeRegistry.getThemes(),
-			apply: (id) => editorManager?.editor?.setTheme?.(id),
+			apply: () => editorManager?.editor?.setTheme?.("one_dark"),
 			get: (id) => cmThemeRegistry.getThemeById(id),
 			getConfig: (id) => cmThemeRegistry.getThemeConfig(id),
 			createTheme,
