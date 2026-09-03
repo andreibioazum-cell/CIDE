@@ -1,33 +1,5 @@
 import { EditorState } from "@codemirror/state";
 import { oneDark } from "@codemirror/theme-one-dark";
-import aura, { config as auraConfig } from "./aura";
-import ayuDark, { config as ayuDarkConfig } from "./ayuDark";
-import {
-	configs as catppuccinConfigs,
-	themes as catppuccinThemes,
-} from "./catppuccin";
-import cobalt, { config as cobaltConfig } from "./cobalt";
-import dracula, { config as draculaConfig } from "./dracula";
-import githubDark, { config as githubDarkConfig } from "./githubDark";
-import githubLight, { config as githubLightConfig } from "./githubLight";
-import gruvboxDark, { config as gruvboxDarkConfig } from "./gruvboxDark";
-import materialPalenight, {
-	config as materialPalenightConfig,
-} from "./materialPalenight";
-import monokai, { config as monokaiConfig } from "./monokai";
-import noctisLilac, { config as noctisLilacConfig } from "./noctisLilac";
-import nord, { config as nordConfig } from "./nord";
-import solarizedDark, { config as solarizedDarkConfig } from "./solarizedDark";
-import solarizedLight, {
-	config as solarizedLightConfig,
-} from "./solarizedLight";
-import tokyoNight, { config as tokyoNightConfig } from "./tokyoNight";
-import tokyoNightDay, { config as tokyoNightDayConfig } from "./tokyoNightDay";
-import tomorrowNight, { config as tomorrowNightConfig } from "./tomorrowNight";
-import tomorrowNightBright, {
-	config as tomorrowNightBrightConfig,
-} from "./tomorrowNightBright";
-import vscodeDark, { config as vscodeDarkConfig } from "./vscodeDark";
 
 const oneDarkConfig = {
 	name: "one_dark",
@@ -87,7 +59,6 @@ function validateThemeExtensions(themeId, extensions) {
 	}
 
 	try {
-		// Validate against Acode's own CodeMirror instance.
 		EditorState.create({ doc: "", extensions });
 		return true;
 	} catch (error) {
@@ -152,143 +123,20 @@ export function getThemeConfig(id) {
 	return theme?.config || oneDarkConfig;
 }
 
-export function getThemeExtensions(id, fallback = [oneDark]) {
+export function getThemeExtensions(_id, fallback = [oneDark]) {
 	const fallbackExtensions = normalizeExtensions(fallback);
-	const theme =
-		getThemeById(id) || getThemeById(String(id || "").replace(/-/g, "_"));
+	const theme = getThemeById("one_dark");
 	return resolveThemeEntryExtensions(theme, fallbackExtensions);
 }
 
 export function removeTheme(id) {
 	if (!id) return;
-	themes.delete(String(id).toLowerCase());
+	const key = String(id).toLowerCase();
+	if (key === "one_dark") return;
+	themes.delete(key);
 }
 
 addTheme("one_dark", "One Dark", true, () => [oneDark], oneDarkConfig);
-addTheme(auraConfig.name, "Aura", !!auraConfig.dark, () => aura(), auraConfig);
-addTheme(
-	cobaltConfig.name,
-	"Cobalt",
-	!!cobaltConfig.dark,
-	() => cobalt(),
-	cobaltConfig,
-);
-addTheme(
-	noctisLilacConfig.name,
-	noctisLilacConfig.caption || "Noctis Lilac",
-	!!noctisLilacConfig.dark,
-	() => noctisLilac(),
-	noctisLilacConfig,
-);
-addTheme(
-	draculaConfig.name,
-	"Dracula",
-	!!draculaConfig.dark,
-	() => dracula(),
-	draculaConfig,
-);
-addTheme(nordConfig.name, "Nord", !!nordConfig.dark, () => nord(), nordConfig);
-addTheme(
-	gruvboxDarkConfig.name,
-	"Gruvbox Dark",
-	!!gruvboxDarkConfig.dark,
-	() => gruvboxDark(),
-	gruvboxDarkConfig,
-);
-addTheme(
-	ayuDarkConfig.name,
-	"Ayu Dark",
-	!!ayuDarkConfig.dark,
-	() => ayuDark(),
-	ayuDarkConfig,
-);
-addTheme(
-	materialPalenightConfig.name,
-	"Material Palenight",
-	!!materialPalenightConfig.dark,
-	() => materialPalenight(),
-	materialPalenightConfig,
-);
-addTheme(
-	githubDarkConfig.name,
-	"GitHub Dark",
-	!!githubDarkConfig.dark,
-	() => githubDark(),
-	githubDarkConfig,
-);
-addTheme(
-	githubLightConfig.name,
-	"GitHub Light",
-	!!githubLightConfig.dark,
-	() => githubLight(),
-	githubLightConfig,
-);
-addTheme(
-	solarizedDarkConfig.name,
-	"Solarized Dark",
-	!!solarizedDarkConfig.dark,
-	() => solarizedDark(),
-	solarizedDarkConfig,
-);
-addTheme(
-	solarizedLightConfig.name,
-	"Solarized Light",
-	!!solarizedLightConfig.dark,
-	() => solarizedLight(),
-	solarizedLightConfig,
-);
-addTheme(
-	tokyoNightDayConfig.name,
-	"Tokyo Night Day",
-	!!tokyoNightDayConfig.dark,
-	() => tokyoNightDay(),
-	tokyoNightDayConfig,
-);
-addTheme(
-	tokyoNightConfig.name,
-	"Tokyo Night",
-	!!tokyoNightConfig.dark,
-	() => tokyoNight(),
-	tokyoNightConfig,
-);
-addTheme(
-	tomorrowNightConfig.name,
-	"Tomorrow Night",
-	!!tomorrowNightConfig.dark,
-	() => tomorrowNight(),
-	tomorrowNightConfig,
-);
-addTheme(
-	tomorrowNightBrightConfig.name,
-	"Tomorrow Night Bright",
-	!!tomorrowNightBrightConfig.dark,
-	() => tomorrowNightBright(),
-	tomorrowNightBrightConfig,
-);
-addTheme(
-	monokaiConfig.name,
-	"Monokai",
-	!!monokaiConfig.dark,
-	() => monokai(),
-	monokaiConfig,
-);
-addTheme(
-	vscodeDarkConfig.name,
-	"VS Code Dark",
-	!!vscodeDarkConfig.dark,
-	() => vscodeDark(),
-	vscodeDarkConfig,
-);
-
-for (const config of catppuccinConfigs) {
-	addTheme(
-		config.name,
-		config.caption,
-		config.dark,
-		() => catppuccinThemes.get(config.name),
-		config,
-	);
-}
 
 export default {
 	getThemes,

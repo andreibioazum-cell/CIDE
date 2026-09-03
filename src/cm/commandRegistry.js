@@ -631,26 +631,6 @@ function registerCoreCommands() {
 		},
 	});
 	addCommand({
-		name: "changeAppTheme",
-		description: "Change App Theme",
-		readOnly: true,
-		requiresView: false,
-		run() {
-			acode.exec("change-app-theme");
-			return true;
-		},
-	});
-	addCommand({
-		name: "changeEditorTheme",
-		description: "Change Editor Theme",
-		readOnly: true,
-		requiresView: false,
-		run() {
-			acode.exec("change-editor-theme");
-			return true;
-		},
-	});
-	addCommand({
 		name: "openTerminal",
 		description: "Open Terminal",
 		readOnly: true,

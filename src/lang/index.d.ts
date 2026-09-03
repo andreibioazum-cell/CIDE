@@ -6,7 +6,6 @@ declare type LangStrings = {
   "about": string;
   "active files": string;
   "alert": string;
-  "app theme": string;
   "autocorrect": string;
   "autosave": string;
   "cancel": string;
@@ -24,7 +23,6 @@ declare type LangStrings = {
   "dependencies": string;
   "delay": string;
   "editor settings": string;
-  "editor theme": string;
   "enter file name": string;
   "enter folder name": string;
   "empty folder message": string;
@@ -477,7 +475,6 @@ declare type LangStrings = {
   "don't ask again": string;
   "allFileAccess": string;
   "fonts": string;
-  "sponsor": string;
   "downloads": string;
   "reviews": string;
   "overview": string;
@@ -525,7 +522,6 @@ declare type LangStrings = {
   "active tools": string;
   "recent": string;
   "command palette": string;
-  "change theme": string;
   "documentation": string;
   "open in terminal": string;
   "developer mode": string;
@@ -687,7 +683,6 @@ declare type LangStrings = {
   "settings-info-app-remember-folders": string;
   "settings-info-app-retry-remote-fs": string;
   "settings-info-app-side-buttons": string;
-  "settings-info-app-sponsor-sidebar": string;
   "settings-info-app-touch-move-threshold": string;
   "settings-info-app-ui-zoom": string;
   "settings-info-app-vibrate-on-tap": string;
@@ -748,9 +743,7 @@ declare type LangStrings = {
   "settings-info-main-rateapp": string;
   "settings-info-main-remove-ads": string;
   "settings-info-main-reset": string;
-  "settings-info-main-sponsors": string;
   "settings-info-main-terminal-settings": string;
-  "settings-info-main-theme": string;
   "settings-info-preview-disable-cache": string;
   "settings-info-preview-host": string;
   "settings-info-preview-mode": string;

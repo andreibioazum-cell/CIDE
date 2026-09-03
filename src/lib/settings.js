@@ -1,12 +1,10 @@
 import fsOperation from "fileSystem";
 import ThemeBuilder from "theme/builder";
 import themes from "theme/list";
-import { getSystemEditorTheme } from "theme/preInstalled";
 import helpers from "utils/helpers";
 import Url from "utils/Url";
 import config from "./config";
-import lang from "./lang";
-import { isDeviceDarkTheme } from "./systemConfiguration";
+import lang, { resolveUiLanguage } from "./lang";
 
 /**
  * @typedef {object} fileBrowserSettings
@@ -199,7 +197,6 @@ class Settings {
 			maxRetryCount: 3,
 			showRetryToast: false,
 			showSideButtons: true,
-			showSponsorSidebarApp: true,
 			showAnnotations: false,
 			lintGutter: true,
 			indentGuides: false,
@@ -225,11 +222,6 @@ class Settings {
 		if (this.#initialized) return;
 		this.settingsFile = Url.join(DATA_STORAGE, "settings.json");
 
-		this.#defaultSettings.appTheme = "system";
-		this.#defaultSettings.editorTheme = getSystemEditorTheme(
-			isDeviceDarkTheme(),
-		);
-
 		this.#initialized = true;
 
 		const fs = fsOperation(this.settingsFile);
@@ -238,7 +230,8 @@ class Settings {
 			await this.#save();
 			this.value = structuredClone(this.#defaultSettings);
 			this.#oldSettings = structuredClone(this.#defaultSettings);
-			this.value.lang = navigator.language || "en-us";
+			this.value.lang = resolveUiLanguage(navigator.language);
+			this.#lockAppearance();
 			return;
 		}
 
@@ -266,6 +259,7 @@ class Settings {
 			// Ensure pluginsDisabled exists
 			if (!this.value.pluginsDisabled) this.value.pluginsDisabled = {};
 
+			this.#lockAppearance();
 			return;
 		}
 
@@ -312,6 +306,8 @@ class Settings {
 				if (key in this.value) this.value[key] = settings[key];
 			});
 		}
+
+		this.#lockAppearance();
 
 		const changedSettings = this.#getChangedKeys();
 		changedSettings.forEach((setting) => {
@@ -377,6 +373,18 @@ class Settings {
 	 */
 	get(key) {
 		return this.value[key];
+	}
+
+	#lockAppearance() {
+		this.value.appTheme = "dark";
+		this.value.editorTheme = "one_dark";
+		this.value.lang = resolveUiLanguage(this.value.lang);
+		if (
+			this.value.terminalSettings &&
+			typeof this.value.terminalSettings === "object"
+		) {
+			this.value.terminalSettings.theme = "dark";
+		}
 	}
 
 	/**
@@ -469,8 +477,7 @@ class Settings {
 	}
 
 	async applyLangSetting() {
-		const value = this.value.lang;
-		lang.set(value);
+		await lang.set(this.value.lang);
 	}
 }
 

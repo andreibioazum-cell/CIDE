@@ -703,21 +703,10 @@ async function loadApp() {
 	notificationManager.init();
 	window.log("info", "Started app and its services...");
 
-	if (!files.length) {
-		const { default: openWelcomeTab } = await import(
-			/* webpackChunkName: "welcome" */ "pages/welcome"
-		);
-		openWelcomeTab();
-	}
-
-	// load theme plugins
-	try {
-		await loadPlugins(true);
-	} catch (error) {
-		window.log("error", "Failed to load theme plugins!");
-		window.log("error", error);
-		toast("Failed to load theme plugins!");
-	}
+	const { default: openWelcomeTab } = await import(
+		/* webpackChunkName: "welcome" */ "pages/welcome"
+	);
+	openWelcomeTab({ render: !files.length });
 
 	acode.setLoadingMessage("Loading folders...");
 	if (Array.isArray(folders)) {

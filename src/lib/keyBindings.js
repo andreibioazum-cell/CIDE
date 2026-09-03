@@ -391,20 +391,6 @@ const APP_BINDING_CONFIG = [
 		readOnly: true,
 	},
 	{
-		name: "changeAppTheme",
-		description: "Change app theme",
-		key: null,
-		action: "change-app-theme",
-		readOnly: true,
-	},
-	{
-		name: "changeEditorTheme",
-		description: "Change editor theme",
-		key: null,
-		action: "change-editor-theme",
-		readOnly: true,
-	},
-	{
 		name: "openTerminal",
 		description: "Open terminal",
 		key: "Ctrl-`",
