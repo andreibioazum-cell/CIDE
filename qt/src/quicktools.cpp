@@ -8,14 +8,26 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
+#include <QScrollArea>
 #include <QVBoxLayout>
 
 namespace {
 constexpr int kKeySize = 40; /* .section min-height 40 */
+constexpr int kRowSize = 44; /* 40 key + 4px scrollbar */
+
+/* QScrollArea::minimumSizeHint incorporates the inner widget, which would
+   stretch the window to the full 16-key row width. The web footer scrolls
+   (.button-container { overflow-x: auto }) instead — so must we. */
+class RowScrollArea : public QScrollArea {
+public:
+    explicit RowScrollArea(QWidget *parent = nullptr) : QScrollArea(parent) {}
+    QSize sizeHint() const override { return QSize(0, kRowSize); }
+    QSize minimumSizeHint() const override { return QSize(0, kRowSize); }
+};
 } // namespace
 
 QuickTools::QuickTools(QWidget *parent) : QWidget(parent) {
-    setStyleSheet(QStringLiteral("background-color: #232729;"));
+    setObjectName(QStringLiteral("quickTools"));
     buildUi();
     setMode(TwoRows);
 }
@@ -41,13 +53,26 @@ void QuickTools::buildUi() {
     m_row2 = buildRow(2);
     m_searchRow1 = buildSearchRow1();
     m_searchRow2 = buildSearchRow2();
-    m_row1->hide();
-    m_row2->hide();
+
+    /* like the web footer (.button-container { overflow-x: auto }) the key
+       rows scroll horizontally instead of stretching the window */
+    auto wrapRow = [this](QWidget *row) {
+        RowScrollArea *scroll = new RowScrollArea(this);
+        scroll->setWidget(row);
+        scroll->setWidgetResizable(true);
+        scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+        scroll->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        scroll->setFrameShape(QFrame::NoFrame);
+        scroll->setFixedHeight(kRowSize);
+        scroll->hide();
+        return scroll;
+    };
+    m_row1Scroll = wrapRow(m_row1);
+    m_row2Scroll = wrapRow(m_row2);
     m_searchRow1->hide();
     m_searchRow2->hide();
 
     QWidget *rowsHost = new QWidget(this);
-    rowsHost->setStyleSheet(QStringLiteral("background-color: #232729;"));
     m_rowsLayout = new QVBoxLayout(rowsHost);
     m_rowsLayout->setContentsMargins(0, 0, 0, 0);
     m_rowsLayout->setSpacing(0);
@@ -58,7 +83,7 @@ void QuickTools::buildUi() {
     outer->addWidget(rowsHost, 1);
 
     m_toggler = new IconButton(this);
-    m_toggler->setFixedSize(28, kKeySize);
+    m_toggler->setFixedSize(28, kRowSize);
     m_toggler->setIcon(Icons::icon(Icons::ChevronUp, QColor(245, 245, 245, 180)), 18);
     connect(m_toggler, &IconButton::clicked, this, [this] {
         if (m_searchMode) {
@@ -76,7 +101,7 @@ void QuickTools::buildUi() {
 
 QWidget *QuickTools::buildRow(int row) {
     QWidget *widget = new QWidget(this);
-    widget->setStyleSheet(QStringLiteral("background-color: #232729;"));
+    widget->setFixedHeight(kKeySize);
     QHBoxLayout *layout = new QHBoxLayout(widget);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
@@ -197,9 +222,9 @@ QWidget *QuickTools::buildRow(int row) {
 
 QWidget *QuickTools::buildSearchRow1() {
     QWidget *widget = new QWidget(this);
-    widget->setStyleSheet(QStringLiteral("background-color: #232729;"));
+    widget->setFixedHeight(kKeySize);
     QHBoxLayout *layout = new QHBoxLayout(widget);
-    layout->setContentsMargins(4, 4, 4, 4);
+    layout->setContentsMargins(4, 2, 4, 2);
     layout->setSpacing(4);
 
     m_searchInput = new QLineEdit(widget);
@@ -232,9 +257,9 @@ QWidget *QuickTools::buildSearchRow1() {
 
 QWidget *QuickTools::buildSearchRow2() {
     QWidget *widget = new QWidget(this);
-    widget->setStyleSheet(QStringLiteral("background-color: #232729;"));
+    widget->setFixedHeight(kKeySize);
     QHBoxLayout *layout = new QHBoxLayout(widget);
-    layout->setContentsMargins(4, 4, 4, 4);
+    layout->setContentsMargins(4, 2, 4, 2);
     layout->setSpacing(4);
 
     m_replaceInput = new QLineEdit(widget);
@@ -271,17 +296,17 @@ void QuickTools::setMode(Mode mode) {
     }
 
     if (m_mode == TwoRows) {
-        m_row1->show();
-        m_row2->show();
-        m_rowsLayout->addWidget(m_row1);
-        m_rowsLayout->addWidget(m_row2);
+        m_row1Scroll->show();
+        m_row2Scroll->show();
+        m_rowsLayout->addWidget(m_row1Scroll);
+        m_rowsLayout->addWidget(m_row2Scroll);
     } else if (m_mode == OneRow) {
-        m_row1->show();
-        m_row2->hide();
-        m_rowsLayout->addWidget(m_row1);
+        m_row1Scroll->show();
+        m_row2Scroll->hide();
+        m_rowsLayout->addWidget(m_row1Scroll);
     } else {
-        m_row1->hide();
-        m_row2->hide();
+        m_row1Scroll->hide();
+        m_row2Scroll->hide();
     }
 
     m_toggler->setIcon(Icons::icon(m_mode == TwoRows ? Icons::ChevronUp : Icons::ChevronDown,

@@ -11,9 +11,17 @@
 - список открытых файлов (30px, вкладки 120px, маркер «•» у
   несохранённых, активная вкладка с синей полосой сверху);
 - сайдбар с панелью приложений (Files, Search, Extensions,
-  Notifications) и деревом файлов открытых хранилищ;
+  Notifications) и деревом файлов открытых хранилищ — как в вебе,
+  это **выезжающий drawer поверх контента** (`#sidebar {
+  position: fixed; width: 70vw; max-width: 350px }`), а не
+  пристыкованная панель: закрывается кнопкой-бургером или кликом
+  по области справа;
 - быстрые инструменты (quick tools) внизу — те же кнопки, что в
   `src/components/quickTools/items.js`, включая режим поиска/замены;
+  ряды кнопок прокручиваются по горизонтали
+  (`.button-container { overflow-x: auto }`), а не растягивают окно;
+- на вкладке «Get Started» быстрые инструменты скрыты
+  (`hideQuickTools: true` у welcome-страницы в вебе);
 - вкладка «Get Started» и настройки (язык EN/RU, шрифт, табы и т.д.);
 - все строки интерфейса взяты из `src/lang/en-us.json` / `ru-ru.json`.
 
@@ -47,5 +55,24 @@ cmake --build qt/build --target CIDEQt_make_apk
 `QT_HOST_PATH` должен указывать на host-сборку Qt для Linux
 (`.../gcc_64`). APK появится в `qt/build/android-build/CIDEQt.apk`.
 
-CI собирает и десктоп-версию (проверка компиляции), и APK — см.
-`.github/workflows/ci.yml`.
+## Скриншоты без дисплея (offscreen)
+
+Для проверки интерфейса без X11/Wayland служит утилита
+`CIDEScreenshot` (цель `CIDEScreenshot`, в `all` не входит):
+
+```sh
+cmake --build qt/build-desktop --target CIDEScreenshot
+QT_QPA_PLATFORM=offscreen \
+QT_QPA_FONTDIR=/usr/share/fonts/truetype/dejavu \
+./qt/build-desktop/CIDEScreenshot <каталог-для-png> [en-us|ru-ru]
+```
+
+`QT_QPA_FONTDIR` должен указывать на каталог с файлами `.ttf`
+напрямую (без fontconfig basic-база шрифтов Qt не обходит
+подкаталоги) — иначе весь текст отрисуется «квадратиками».
+Утилита сохраняет 4 снимка: `*-phone` (420×840, редактор),
+`*-wide` (1000×800, редактор), `*-sidebar` (drawer открыт) и
+`*-welcome` (вкладка «Get Started», локализованные строки).
+
+CI в репозитории сейчас собирает веб-приложение; Qt-сборки
+выполняются локально по командам выше.

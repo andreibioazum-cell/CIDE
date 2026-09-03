@@ -6,8 +6,10 @@
 #include <QFontMetrics>
 #include <QHBoxLayout>
 #include <QMouseEvent>
+#include <QEvent>
 #include <QPainter>
 #include <QScrollArea>
+#include <QVBoxLayout>
 
 namespace {
 constexpr int kTabWidth = 120; /* --file-tab-width */
@@ -120,6 +122,7 @@ void TabButton::leaveEvent(QEvent *event) {
 /* ------------------------------------------------------------------ */
 
 FileTabs::FileTabs(QWidget *parent) : QWidget(parent) {
+    setObjectName(QStringLiteral("fileTabs"));
     setFixedHeight(kStripHeight);
 
     m_scroll = new QScrollArea(this);

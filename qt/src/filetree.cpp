@@ -15,7 +15,9 @@
 #include <QListWidget>
 #include <QMenu>
 #include <QMessageBox>
+#include <QEvent>
 #include <QPainter>
+#include <QMouseEvent>
 #include <QPushButton>
 #include <QScrollArea>
 #include <QStackedWidget>
@@ -363,6 +365,7 @@ private:
 /* ------------------------------------------------------------------ */
 
 Sidebar::Sidebar(QWidget *parent) : QWidget(parent) {
+    setObjectName(QStringLiteral("sidebarContainer"));
     buildRail();
     buildPanels();
 
@@ -372,7 +375,7 @@ Sidebar::Sidebar(QWidget *parent) : QWidget(parent) {
     layout->addWidget(m_rail);
     layout->addWidget(m_panels, 1);
 
-    setFixedWidth(280); /* 70vw max 350 on phone; docked default */
+    setMinimumWidth(180); /* #sidebar { width: 70vw; max-width: 350px } — overlay drawer */
     setActiveApp(FilesApp);
 }
 

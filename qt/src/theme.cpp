@@ -29,7 +29,7 @@ void apply() {
     p.setColor(QPalette::Disabled, QPalette::Window, QColor(35, 39, 42));
     QApplication::setPalette(p);
 
-    QApplication::setStyleSheet(QStringLiteral(R"==CSS==(
+    qApp->setStyleSheet(QStringLiteral(R"==CSS==(
         /* ---- context menus (components/contextmenu) ---- */
         QMenu {
             background-color: #232729;
@@ -230,11 +230,12 @@ void apply() {
         }
 
         QScrollArea {
-            background: transparent;
             border: none;
         }
-        QWidget#sidebarContainer, QWidget#quickTools, QWidget#headerBar, QWidget#fileTabs {
-            font-size: 14px;
+
+        /* ---- shell surfaces (object-name rules don't propagate to children) ---- */
+        #headerBar, #fileTabs, #quickTools, #sidebarContainer, #centralRoot {
+            background-color: #232729;
         }
     )==CSS=="));
 }

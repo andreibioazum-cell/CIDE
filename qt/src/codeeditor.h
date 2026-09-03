@@ -47,8 +47,8 @@ public:
     static QString defaultFontFamily();
 
 signals:
-    void modificationChanged(bool modified);
     void editorFocus();
+    /* note: QPlainTextEdit::modificationChanged(bool) is used directly */
 
 protected:
     void resizeEvent(QResizeEvent *event) override;

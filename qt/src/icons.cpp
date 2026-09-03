@@ -18,7 +18,7 @@ struct CacheKey {
     QRgb color;
     bool operator==(const CacheKey &o) const { return kind == o.kind && color == o.color; }
 };
-inline uint qHash(const CacheKey &k, uint seed) { return qHash(k.kind, seed) ^ qHash(k.color, seed); }
+inline uint qHash(const CacheKey &k, uint seed) { return ::qHash(k.kind, seed) ^ ::qHash(k.color, seed); }
 
 QPixmap render(const std::function<void(QPainter &)> &paint, const QColor &color) {
     const int px = 96; /* render large; QIcon scales down crisply */

@@ -110,7 +110,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 void MainWindow::buildUi() {
     m_header = new HeaderBar(this);
     connect(m_header, &HeaderBar::navToggled, this, [this] {
-        m_sidebar->setVisible(!m_sidebar->isVisible());
+        if (m_sidebar->isVisible()) hideSidebar();
+        else showSidebar();
     });
     connect(m_header, &HeaderBar::menuToggled, this, [this] { showMainMenu(); });
     connect(m_header, &HeaderBar::fileMenuToggled, this, [this] { showFileMenu(); });
@@ -144,29 +145,22 @@ void MainWindow::buildUi() {
     connect(m_welcome, &WelcomeTab::openSettingsRequested, this, [this] { settingsDialog(); });
     connect(m_welcome, &WelcomeTab::explorePluginsRequested, this, [this] {
         m_sidebar->setActiveApp(Sidebar::ExtensionsApp);
-        m_sidebar->show();
+        showSidebar();
     });
     connect(m_welcome, &WelcomeTab::helpRequested, this, [this] { helpPage(); });
     connect(m_welcome, &WelcomeTab::aboutRequested, this, [this] { aboutDialog(); });
     m_editorStack->addWidget(m_welcome);
 
-    m_bodyRow = new QWidget(this);
-    QHBoxLayout *bodyLayout = new QHBoxLayout(m_bodyRow);
-    bodyLayout->setContentsMargins(0, 0, 0, 0);
-    bodyLayout->setSpacing(0);
-    bodyLayout->addWidget(m_sidebar);
-    bodyLayout->addWidget(m_editorStack, 1);
-
     m_quickTools = new QuickTools(this);
 
     m_central = new QWidget(this);
-    m_central->setStyleSheet(QStringLiteral("background-color: #232729;"));
+    m_central->setObjectName(QStringLiteral("centralRoot"));
     QVBoxLayout *centralLayout = new QVBoxLayout(m_central);
     centralLayout->setContentsMargins(0, 0, 0, 0);
     centralLayout->setSpacing(0);
     centralLayout->addWidget(m_header);
     centralLayout->addWidget(m_tabs);
-    centralLayout->addWidget(m_bodyRow, 1);
+    centralLayout->addWidget(m_editorStack, 1);
     centralLayout->addWidget(m_quickTools);
 
     m_toast = new QLabel(m_central);
@@ -182,7 +176,43 @@ void MainWindow::buildUi() {
 
     setCentralWidget(m_central);
 
-    if (width() < 720) m_sidebar->hide();
+    /* the web sidebar is an overlay drawer (position: fixed, 70vw max 350px,
+       z-index above everything) with a transparent mask catching outside
+       clicks — never part of the layout flow */
+    m_sidebarMask = new QWidget(this);
+    m_sidebarMask->setObjectName(QStringLiteral("sidebarMask"));
+    m_sidebarMask->setStyleSheet(QStringLiteral("background: transparent;"));
+    m_sidebarMask->hide();
+    m_sidebarMask->installEventFilter(this);
+}
+
+bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
+    if (watched == m_sidebarMask && event->type() == QEvent::MouseButtonPress) {
+        hideSidebar();
+        return true;
+    }
+    return QMainWindow::eventFilter(watched, event);
+}
+
+void MainWindow::showSidebar() {
+    positionSidebar();
+    m_sidebarMask->show();
+    m_sidebarMask->raise();
+    m_sidebar->show();
+    m_sidebar->raise();
+}
+
+void MainWindow::hideSidebar() {
+    m_sidebar->hide();
+    m_sidebarMask->hide();
+}
+
+void MainWindow::positionSidebar() {
+    /* #sidebar { width: 70vw; max-width: 350px; } */
+    const int sidebarWidth = qBound(180, int(width() * 0.7), 350);
+    m_sidebar->setFixedWidth(sidebarWidth);
+    m_sidebar->setGeometry(0, 0, sidebarWidth, height());
+    m_sidebarMask->setGeometry(rect());
 }
 
 void MainWindow::connectQuickTools() {
@@ -330,7 +360,7 @@ int MainWindow::openFile(const QString &path) {
     session.editor->document()->setModified(false);
     session.highlighter = new Highlighter(session.editor->document(), Highlighter::languageForFile(info.fileName()));
 
-    connect(session.editor, &CodeEditor::modificationChanged, this, [this](bool) {
+    connect(session.editor, &QPlainTextEdit::modificationChanged, this, [this](bool) {
         rebuildTabs();
         updateQuickToolsState();
     });
@@ -385,7 +415,7 @@ void MainWindow::newFile() {
     session.title = QStringLiteral("new file");
     session.editor = new CodeEditor(m_editorStack);
     session.highlighter = new Highlighter(session.editor->document(), Highlighter::PlainText);
-    connect(session.editor, &CodeEditor::modificationChanged, this, [this](bool) {
+    connect(session.editor, &QPlainTextEdit::modificationChanged, this, [this](bool) {
         rebuildTabs();
         updateQuickToolsState();
     });
@@ -515,6 +545,7 @@ void MainWindow::setActiveTab(int tabIndex) {
     m_tabs->ensureVisible(tabIndex);
     updateHeader();
     updateQuickToolsState();
+    saveState();
 }
 
 void MainWindow::rebuildTabs() {
@@ -567,6 +598,8 @@ void MainWindow::updateQuickToolsState() {
     m_quickTools->setSaveBadge(editor && editor->document()->isModified());
     m_quickTools->setCanUndo(editor && editor->document()->isUndoAvailable());
     m_quickTools->setCanRedo(editor && editor->document()->isRedoAvailable());
+    /* the welcome tab is a page (hideQuickTools: true in the web version) */
+    m_quickTools->setVisible(editor != nullptr && AppState::instance()->quickToolsEnabled());
 }
 
 /* ------------------------------------------------------------------ */
@@ -589,7 +622,7 @@ void MainWindow::showMainMenu() {
     item(Icons::Save, Lang::s(QStringLiteral("save as")), canSave, [this] { saveSession(activeSessionIndex(), true); });
     item(Icons::Folder, Lang::s(QStringLiteral("files")), true, [this] {
         m_sidebar->setActiveApp(Sidebar::FilesApp);
-        m_sidebar->show();
+        showSidebar();
     });
     item(Icons::Close, Lang::s(QStringLiteral("close file")), canSave, [this] { closeSessionAt(activeSessionIndex()); });
     item(Icons::History, Lang::s(QStringLiteral("open recent")), !AppState::instance()->recentFiles().isEmpty(), [this] { recentDialog(); });
@@ -767,16 +800,17 @@ void MainWindow::showFileProperties() {
     const QFileInfo info(session.path);
 
     const int lines = session.editor->document()->blockCount();
-    QString text = QStringLiteral(
-        "%1: %2\n%3: %4\n%5: %6\n%7: %8\n%9: %10\n%11: %12\n%13: %14")
-        .arg(Lang::s(QStringLiteral("path")), info.absoluteFilePath(),
-             Lang::s(QStringLiteral("type")), Lang::s(QStringLiteral("file")),
-             Lang::s(QStringLiteral("size")), QString::number(info.size()),
-             Lang::s(QStringLiteral("line count")), QString::number(lines),
-             Lang::s(QStringLiteral("encoding")), session.encoding,
-             Lang::s(QStringLiteral("new line mode")), session.crlf ? QStringLiteral("CRLF") : QStringLiteral("LF"),
-             Lang::s(QStringLiteral("syntax highlighting")),
-             session.highlighter ? Highlighter::languageName(Highlighter::languageForFile(session.title)) : QString());
+    const QStringList rows = {
+        Lang::s(QStringLiteral("path")) + QStringLiteral(": ") + info.absoluteFilePath(),
+        Lang::s(QStringLiteral("type")) + QStringLiteral(": ") + Lang::s(QStringLiteral("file")),
+        Lang::s(QStringLiteral("size")) + QStringLiteral(": ") + QString::number(info.size()),
+        Lang::s(QStringLiteral("line count")) + QStringLiteral(": ") + QString::number(lines),
+        Lang::s(QStringLiteral("encoding")) + QStringLiteral(": ") + session.encoding,
+        Lang::s(QStringLiteral("new line mode")) + QStringLiteral(": ") + (session.crlf ? QStringLiteral("CRLF") : QStringLiteral("LF")),
+        Lang::s(QStringLiteral("syntax highlighting")) + QStringLiteral(": ") +
+            (session.highlighter ? Highlighter::languageName(Highlighter::languageForFile(session.title)) : QString()),
+    };
+    const QString text = rows.join(QLatin1Char('\n'));
 
     QMessageBox box(this);
     box.setWindowTitle(Lang::s(QStringLiteral("file properties")));
@@ -1171,9 +1205,12 @@ void MainWindow::retranslate() {
 
 void MainWindow::resizeEvent(QResizeEvent *event) {
     QMainWindow::resizeEvent(event);
-    const int sidebarWidth = qBound(180, int(width() * 0.7), 350);
-    m_sidebar->setFixedWidth(sidebarWidth);
-    if (width() >= 720) m_sidebar->show();
+    if (m_sidebar->isVisible()) positionSidebar();
+}
+
+void MainWindow::showEvent(QShowEvent *event) {
+    QMainWindow::showEvent(event);
+    if (m_sidebar->isVisible()) positionSidebar();
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {

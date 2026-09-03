@@ -53,6 +53,22 @@ qt_add_resources(CIDEQt "cideres"
 
 target_link_libraries(CIDEQt PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets)
 
+# --- offscreen screenshot tool (desktop only, used for UI testing) --------
+if(NOT ANDROID)
+    set(CIDE_LIB_SOURCES ${CIDE_SOURCES})
+    list(REMOVE_ITEM CIDE_LIB_SOURCES src/main.cpp)
+    qt_add_executable(CIDEScreenshot EXCLUDE_FROM_ALL
+        tools/screenshot_main.cpp
+        ${CIDE_LIB_SOURCES}
+    )
+    target_include_directories(CIDEScreenshot PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    target_link_libraries(CIDEScreenshot PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets)
+    qt_add_resources(CIDEScreenshot "cideres_shot"
+        PREFIX "/"
+        FILES res/logo.png
+    )
+endif()
+
 # --- Android packaging -----------------------------------------------------
 set_target_properties(CIDEQt PROPERTIES
     QT_ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android"

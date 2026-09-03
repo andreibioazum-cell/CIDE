@@ -27,9 +27,18 @@ class MainWindow : public QMainWindow {
 public:
     explicit MainWindow(QWidget *parent = nullptr);
 
+    /* used by the offscreen screenshot tool */
+    Sidebar *sidebar() const { return m_sidebar; }
+    int openFileIn(const QString &path) { return openFile(path); }
+    void activateTab(int tabIndex) { setActiveTab(tabIndex); }
+    void showSidebar();
+    void hideSidebar();
+
 protected:
     void resizeEvent(QResizeEvent *event) override;
+    void showEvent(QShowEvent *event) override;
     void closeEvent(QCloseEvent *event) override;
+    bool eventFilter(QObject *watched, QEvent *event) override;
 
 private:
     struct EditorSession {
@@ -47,6 +56,7 @@ private:
     void buildUi();
     void connectQuickTools();
     void connectTabs();
+    void positionSidebar();
 
     /* files */
     int openFile(const QString &path);
@@ -115,7 +125,7 @@ private:
     QStackedWidget *m_editorStack = nullptr;
     WelcomeTab *m_welcome = nullptr;
     QWidget *m_central = nullptr;
-    QWidget *m_bodyRow = nullptr;
+    QWidget *m_sidebarMask = nullptr;
     QLabel *m_toast = nullptr;
 
     QList<EditorSession> m_sessions;

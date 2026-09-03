@@ -25,3 +25,4 @@ tsconfig.tsbuildinfo
 /www/cordova_plugins.js
 .pnpm-store/qt/build*
 qt/build-desktop/
+.arena/

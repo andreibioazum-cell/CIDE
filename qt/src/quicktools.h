@@ -5,6 +5,7 @@
 class QHBoxLayout;
 class QLabel;
 class QLineEdit;
+class QScrollArea;
 class QVBoxLayout;
 
 class IconButton;
@@ -76,6 +77,8 @@ private:
     QVBoxLayout *m_rowsLayout = nullptr;
     QWidget *m_row1 = nullptr;
     QWidget *m_row2 = nullptr;
+    QScrollArea *m_row1Scroll = nullptr;
+    QScrollArea *m_row2Scroll = nullptr;
     QWidget *m_searchRow1 = nullptr;
     QWidget *m_searchRow2 = nullptr;
     IconButton *m_toggler = nullptr;

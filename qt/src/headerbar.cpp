@@ -5,6 +5,7 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QMouseEvent>
+#include <QEvent>
 #include <QPainter>
 #include <QVBoxLayout>
 
@@ -134,6 +135,7 @@ void IconButton::enterEvent(QEnterEvent *event) {
 /* ------------------------------------------------------------------ */
 
 HeaderBar::HeaderBar(QWidget *parent) : QWidget(parent) {
+    setObjectName(QStringLiteral("headerBar"));
     setFixedHeight(45); /* .header.tile height */
 
     m_layout = new QHBoxLayout(this);
